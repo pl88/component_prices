@@ -1,0 +1,47 @@
+[project]
+name = "component-prices"
+version = "0.1.0"
+description = "Containerized scraper for tracking component prices."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+  "alembic>=1.14.0",
+  "beautifulsoup4>=4.12.3",
+  "httpx>=0.28.1",
+  "lxml>=5.3.0",
+  "psycopg[binary]>=3.2.3",
+  "pydantic-settings>=2.6.1",
+  "sqlalchemy>=2.0.36",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pyright>=1.1.390",
+  "pytest>=8.3.4",
+  "pytest-httpx>=0.35.0",
+  "ruff>=0.8.3",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "N", "W"]
+
+[tool.pyright]
+typeCheckingMode = "strict"
+include = ["scraper", "tests"]
+venvPath = "."
+venv = ".venv"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[build-system]
+requires = ["setuptools>=70.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["scraper*"]
