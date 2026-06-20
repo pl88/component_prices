@@ -5,11 +5,18 @@ from scraper.models import Component, ComponentShopURL, Shop
 
 MVP_SHOP_NAME = "x-kom"
 MVP_SHOP_URL = "https://www.x-kom.pl"
-MVP_COMPONENT_NAME = "Gigabyte Radeon RX 9060 XT Gaming OC 16GB GDDR6"
-MVP_COMPONENT_CATEGORY = "GPU"
-MVP_PRODUCT_URL = (
-    "https://www.x-kom.pl/p/1339802-karta-graficzna-amd-gigabyte-radeon-rx-9060-xt-gaming-oc-16gb-"
-    "gddr6.html"
+MVP_COMPONENTS = (
+    (
+        "Gigabyte Radeon RX 9060 XT Gaming OC 16GB GDDR6",
+        "GPU",
+        "https://www.x-kom.pl/p/1339802-karta-graficzna-amd-gigabyte-radeon-rx-9060-xt-gaming-oc-"
+        "16gb-gddr6.html",
+    ),
+    (
+        "AMD Ryzen 9 5950X",
+        "CPU",
+        "https://www.x-kom.pl/p/597434-procesor-amd-ryzen-9-amd-ryzen-9-5950x.html",
+    ),
 )
 
 
@@ -20,26 +27,27 @@ def seed_mvp_data(session: Session) -> None:
         session.add(shop)
         session.flush()
 
-    component = session.scalar(select(Component).where(Component.name == MVP_COMPONENT_NAME))
-    if component is None:
-        component = Component(name=MVP_COMPONENT_NAME, category=MVP_COMPONENT_CATEGORY)
-        session.add(component)
-        session.flush()
+    for component_name, component_category, product_url in MVP_COMPONENTS:
+        component = session.scalar(select(Component).where(Component.name == component_name))
+        if component is None:
+            component = Component(name=component_name, category=component_category)
+            session.add(component)
+            session.flush()
 
-    mapping = session.scalar(
-        select(ComponentShopURL).where(
-            ComponentShopURL.component_id == component.id,
-            ComponentShopURL.shop_id == shop.id,
-        )
-    )
-    if mapping is None:
-        session.add(
-            ComponentShopURL(
-                component_id=component.id,
-                shop_id=shop.id,
-                product_url=MVP_PRODUCT_URL,
-                active=True,
+        mapping = session.scalar(
+            select(ComponentShopURL).where(
+                ComponentShopURL.component_id == component.id,
+                ComponentShopURL.shop_id == shop.id,
             )
         )
+        if mapping is None:
+            session.add(
+                ComponentShopURL(
+                    component_id=component.id,
+                    shop_id=shop.id,
+                    product_url=product_url,
+                    active=True,
+                )
+            )
 
     session.commit()

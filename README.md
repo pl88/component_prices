@@ -14,7 +14,7 @@ Provide a reliable, automated price-history store for PC components. On each sch
 
 | Feature | Included in MVP |
 |---|---|
-| Track a single component (Gigabyte Radeon RX 9060 XT Gaming OC 16GB GDDR6) | ✅ |
+| Track two components (Gigabyte Radeon RX 9060 XT Gaming OC 16GB GDDR6, AMD Ryzen 9 5950X) | ✅ |
 | Track a single shop (x-kom.pl) | ✅ |
 | Daily price collection via cron job | ✅ |
 | Persist prices in PostgreSQL | ✅ |
@@ -113,12 +113,13 @@ On first startup Alembic applies all pending migrations, then a seed script (ide
 - name: `x-kom`
 - base_url: `https://www.x-kom.pl`
 
-**Component**
-- name: `Gigabyte Radeon RX 9060 XT Gaming OC 16GB GDDR6`
-- category: `GPU`
+**Components**
+- name: `Gigabyte Radeon RX 9060 XT Gaming OC 16GB GDDR6`, category: `GPU`
+- name: `AMD Ryzen 9 5950X`, category: `CPU`
 
 **component_shop_url**
 - product_url: `https://www.x-kom.pl/p/1339802-karta-graficzna-amd-gigabyte-radeon-rx-9060-xt-gaming-oc-16gb-gddr6.html`
+- product_url: `https://www.x-kom.pl/p/597434-procesor-amd-ryzen-9-amd-ryzen-9-5950x.html`
 
 ---
 
