@@ -152,7 +152,7 @@ def scrape_once(
                 inserted += 1
             else:
                 skipped += 1
-        except (httpx.HTTPError, SQLAlchemyError, ValueError, RuntimeError):
+        except httpx.HTTPError, SQLAlchemyError, ValueError, RuntimeError:
             session.rollback()
             failed += 1
             logger.exception("Failed to scrape target url=%s", target.product_url)
