@@ -8,7 +8,7 @@ from scraper.models import Base, Component, ComponentShopURL, Shop
 
 
 @pytest.fixture()
-def session() -> Generator[Session, None, None]:
+def session() -> Generator[Session]:
     engine = create_engine("sqlite+pysqlite:///:memory:", future=True)
     Base.metadata.create_all(engine)
     session_factory = sessionmaker(bind=engine, expire_on_commit=False)
