@@ -36,7 +36,7 @@ class Shop(Base):
         TIMESTAMP(timezone=True), nullable=False, server_default=func.now()
     )
 
-    component_urls: Mapped[list["ComponentShopURL"]] = relationship(back_populates="shop")
+    component_urls: Mapped[list[ComponentShopURL]] = relationship(back_populates="shop")
 
 
 class Component(Base):
@@ -49,7 +49,7 @@ class Component(Base):
         TIMESTAMP(timezone=True), nullable=False, server_default=func.now()
     )
 
-    shop_urls: Mapped[list["ComponentShopURL"]] = relationship(back_populates="component")
+    shop_urls: Mapped[list[ComponentShopURL]] = relationship(back_populates="component")
 
 
 class ComponentShopURL(Base):
@@ -66,7 +66,7 @@ class ComponentShopURL(Base):
 
     component: Mapped[Component] = relationship(back_populates="shop_urls")
     shop: Mapped[Shop] = relationship(back_populates="component_urls")
-    snapshots: Mapped[list["PriceSnapshot"]] = relationship(back_populates="component_shop_url")
+    snapshots: Mapped[list[PriceSnapshot]] = relationship(back_populates="component_shop_url")
 
 
 class PriceSnapshot(Base):
