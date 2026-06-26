@@ -22,6 +22,10 @@ from scraper.models import ComponentShopURL, PriceSnapshot
 
 logger = logging.getLogger(__name__)
 PRICE_PATTERN = re.compile(r"([0-9][0-9 \u00a0]*[,.][0-9]{2})\s*z[łl]", re.IGNORECASE)
+CATEGORY_MIN_PRICE: dict[str, Decimal] = {
+    "CPU": Decimal("500"),
+    "GPU": Decimal("1000"),
+}
 PRICE_SELECTORS = (
     "[data-name='ProductPrice']",
     "[data-price]",
@@ -48,34 +52,34 @@ class HttpClient(Protocol):
     ) -> httpx.Response: ...
 
 
-def parse_price_pln(html: str) -> Decimal:
+def parse_price_pln(html: str, min_price: Decimal | None = None) -> Decimal:
     soup = BeautifulSoup(html, "lxml")
 
     for selector in PRICE_SELECTORS:
         for element in soup.select(selector):
             text = element.get_text(" ", strip=True)
-            parsed = _extract_price(text)
+            parsed = _extract_price(text, min_price)
             if parsed is not None:
                 return parsed
 
     text = soup.get_text(" ", strip=True)
-    parsed = _extract_price(text)
+    parsed = _extract_price(text, min_price)
     if parsed is None:
         msg = "Unable to locate a valid price in HTML content."
         raise ValueError(msg)
     return parsed
 
 
-def _extract_price(text: str) -> Decimal | None:
-    match = PRICE_PATTERN.search(text)
-    if match is None:
-        return None
-
-    normalized = match.group(1).replace(" ", "").replace("\u00a0", "").replace(",", ".")
-    try:
-        return Decimal(normalized).quantize(Decimal("0.01"))
-    except InvalidOperation:
-        return None
+def _extract_price(text: str, min_price: Decimal | None = None) -> Decimal | None:
+    for match in PRICE_PATTERN.finditer(text):
+        normalized = match.group(1).replace(" ", "").replace("\u00a0", "").replace(",", ".")
+        try:
+            value = Decimal(normalized).quantize(Decimal("0.01"))
+        except InvalidOperation:
+            continue
+        if min_price is None or value >= min_price:
+            return value
+    return None
 
 
 def _target_query() -> Select[tuple[ComponentShopURL]]:
@@ -138,7 +142,9 @@ def scrape_once(
                 timeout=settings.http_timeout_seconds,
             )
             response.raise_for_status()
-            price = parse_price_pln(response.text)
+            category = target.component.category.upper()
+            min_price = CATEGORY_MIN_PRICE.get(category)
+            price = parse_price_pln(response.text, min_price)
             stmt = _insert_stmt(
                 dialect=session.get_bind().dialect,
                 component_shop_url_id=target.id,
