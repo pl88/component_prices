@@ -1,4 +1,4 @@
-.PHONY: run backend-up backend-down down test lint format check
+.PHONY: run backend-up backend-down start-frontend stop-frontend down test lint format check
 
 run:
 	docker compose up -d db
@@ -9,6 +9,13 @@ backend-up:
 
 backend-down:
 	docker compose stop backend
+
+start-frontend:
+	docker compose build frontend
+	docker compose up -d frontend
+
+stop-frontend:
+	docker compose stop frontend
 
 down:
 	docker compose down
