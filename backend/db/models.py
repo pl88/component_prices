@@ -89,9 +89,7 @@ class User(SQLModel, table=True):
     __tablename__ = "users"
 
     id: int | None = Field(default=None, primary_key=True)
-    email: str = Field(
-        sa_column=sa.Column(sa.String(255), nullable=False, unique=True, index=True)
-    )
+    email: str = Field(sa_column=sa.Column(sa.String(255), nullable=False, unique=True, index=True))
     name: str = Field(sa_column=sa.Column(sa.String(255), nullable=False))
     password_hash: str = Field(sa_column=sa.Column(sa.Text, nullable=False))
     is_active: bool = Field(

@@ -58,11 +58,13 @@ def seeded_target(session: Session) -> ComponentShopURL:
 
 @pytest.fixture()
 def test_user(session: Session) -> User:
+    now = datetime.now(UTC)
     user = User(
         email="test",
         name="Test User",
         password_hash=hash_password("test"),
         is_active=True,
+        created_at=now,
     )
     session.add(user)
     session.commit()

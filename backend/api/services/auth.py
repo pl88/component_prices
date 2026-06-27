@@ -52,7 +52,7 @@ def verify_password(password: str, password_hash: str) -> bool:
         iterations = int(iterations_s)
         salt = base64.b64decode(salt_s)
         expected = base64.b64decode(expected_s)
-    except (ValueError, binascii.Error):
+    except ValueError, binascii.Error:
         return False
 
     candidate = hashlib.pbkdf2_hmac(
@@ -77,9 +77,7 @@ def create_access_token(*, user_id: int, email: str, settings: Settings) -> str:
     }
 
     header_segment = _b64url_encode(json.dumps(header, separators=(",", ":")).encode("utf-8"))
-    payload_segment = _b64url_encode(
-        json.dumps(payload, separators=(",", ":")).encode("utf-8")
-    )
+    payload_segment = _b64url_encode(json.dumps(payload, separators=(",", ":")).encode("utf-8"))
     signing_input = f"{header_segment}.{payload_segment}".encode("ascii")
     signature = hmac.new(
         settings.auth_secret_key.encode("utf-8"),
@@ -105,7 +103,7 @@ def decode_access_token(token: str, settings: Settings) -> dict[str, Any] | None
 
     try:
         provided_signature = _b64url_decode(signature_segment)
-    except (ValueError, binascii.Error):
+    except ValueError, binascii.Error:
         return None
 
     if not hmac.compare_digest(expected_signature, provided_signature):
@@ -114,7 +112,7 @@ def decode_access_token(token: str, settings: Settings) -> dict[str, Any] | None
     try:
         payload_raw = _b64url_decode(payload_segment)
         payload: dict[str, Any] = json.loads(payload_raw)
-    except (ValueError, json.JSONDecodeError, binascii.Error):
+    except ValueError, json.JSONDecodeError, binascii.Error:
         return None
 
     exp = payload.get("exp")
