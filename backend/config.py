@@ -4,7 +4,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    postgres_host: str = "db"
+    postgres_host: str = "localhost"
     postgres_port: int = 5432
     postgres_db: str = "component_prices"
     postgres_user: str = "scraper"
@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     )
     db_ready_attempts: int = 6
     db_ready_base_delay_seconds: float = 1.0
+    auth_secret_key: str = "dev-secret-change-me"
+    auth_token_ttl_hours: int = 24
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

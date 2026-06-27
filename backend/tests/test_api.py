@@ -14,7 +14,9 @@ from backend.db.session import get_session
 def test_get_component_by_name_returns_latest_price(
     session: Session,
     seeded_target: ComponentShopURL,
+    test_user: Any,
 ) -> None:
+    del test_user
     assert seeded_target.id is not None
     target_id = seeded_target.id
 
@@ -42,10 +44,20 @@ def test_get_component_by_name_returns_latest_price(
     try:
         with TestClient(app) as client:
             client_any: Any = client
+            login_response: Response = cast(
+                Response,
+                client_any.post(
+                    "/auth/login",
+                    json={"email": "test", "password": "test"},
+                ),
+            )
+            assert login_response.status_code == 200
+            token = cast(dict[str, Any], login_response.json())["token"]
             response: Response = cast(
                 Response,
                 client_any.get(
-                    "/api/v1/components/Gigabyte Radeon RX 9060 XT Gaming OC 16GB GDDR6"
+                    "/api/v1/components/Gigabyte Radeon RX 9060 XT Gaming OC 16GB GDDR6",
+                    headers={"Authorization": f"Bearer {token}"},
                 ),
             )
     finally:
@@ -65,13 +77,91 @@ def test_get_component_by_name_returns_latest_price(
     ]
 
 
-def test_get_component_by_name_returns_404(session: Session) -> None:
+def test_get_component_by_name_returns_404(session: Session, test_user: Any) -> None:
+    del test_user
     app.dependency_overrides[get_session] = lambda: session
     try:
         with TestClient(app) as client:
             client_any: Any = client
-            response: Response = cast(Response, client_any.get("/api/v1/components/not-found"))
+            login_response: Response = cast(
+                Response,
+                client_any.post(
+                    "/auth/login",
+                    json={"email": "test", "password": "test"},
+                ),
+            )
+            assert login_response.status_code == 200
+            token = cast(dict[str, Any], login_response.json())["token"]
+            response: Response = cast(
+                Response,
+                client_any.get(
+                    "/api/v1/components/not-found",
+                    headers={"Authorization": f"Bearer {token}"},
+                ),
+            )
     finally:
         app.dependency_overrides.clear()
 
     assert response.status_code == 404
+
+
+def test_components_endpoint_requires_auth(session: Session) -> None:
+    app.dependency_overrides[get_session] = lambda: session
+    try:
+        with TestClient(app) as client:
+            client_any: Any = client
+            response: Response = cast(
+                Response,
+                client_any.get(
+                    "/api/v1/components/Gigabyte Radeon RX 9060 XT Gaming OC 16GB GDDR6"
+                ),
+            )
+    finally:
+        app.dependency_overrides.clear()
+
+    assert response.status_code == 401
+
+
+def test_login_success(session: Session, test_user: Any) -> None:
+    del test_user
+    app.dependency_overrides[get_session] = lambda: session
+    try:
+        with TestClient(app) as client:
+            client_any: Any = client
+            response: Response = cast(
+                Response,
+                client_any.post(
+                    "/auth/login",
+                    json={"email": "test", "password": "test"},
+                ),
+            )
+    finally:
+        app.dependency_overrides.clear()
+
+    assert response.status_code == 200
+    payload = cast(dict[str, Any], response.json())
+    assert "token" in payload
+    assert payload["user"] == {
+        "id": "1",
+        "email": "test",
+        "name": "Test User",
+    }
+
+
+def test_login_invalid_credentials(session: Session, test_user: Any) -> None:
+    del test_user
+    app.dependency_overrides[get_session] = lambda: session
+    try:
+        with TestClient(app) as client:
+            client_any: Any = client
+            response: Response = cast(
+                Response,
+                client_any.post(
+                    "/auth/login",
+                    json={"email": "test", "password": "wrong"},
+                ),
+            )
+    finally:
+        app.dependency_overrides.clear()
+
+    assert response.status_code == 401

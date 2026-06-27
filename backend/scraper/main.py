@@ -12,7 +12,7 @@ from sqlalchemy.orm import sessionmaker
 
 from backend.config import Settings, get_settings
 from backend.scraper.scraper import scrape_once
-from backend.scraper.seed import seed_mvp_data
+from backend.scraper.seed import seed_mvp_data, seed_test_user
 
 logging.basicConfig(
     level=logging.INFO,
@@ -56,6 +56,7 @@ def main() -> int:
 
     with session_factory() as session:
         seed_mvp_data(session)
+        seed_test_user(session)
 
     with session_factory() as session, httpx.Client() as client:
         summary = scrape_once(session=session, settings=settings, client=client)

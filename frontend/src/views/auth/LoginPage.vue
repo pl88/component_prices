@@ -9,9 +9,10 @@
           <input
             id="email"
             v-model="email"
-            type="email"
+            type="text"
             required
-            placeholder="your@email.com"
+            placeholder="Email or username"
+            autocomplete="username"
           />
         </div>
 

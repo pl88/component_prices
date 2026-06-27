@@ -3,6 +3,7 @@ from datetime import UTC, datetime
 from sqlalchemy.orm import Session
 from sqlmodel import select as sqlmodel_select
 
+from backend.api.services.auth import hash_password
 from backend.db.models import Component, ComponentShopURL, Shop
 
 MVP_SHOP_NAME = "x-kom"
@@ -61,3 +62,19 @@ def seed_mvp_data(session: Session) -> None:
             )
 
     session.commit()
+
+
+def seed_test_user(session: Session) -> None:
+    from backend.db.models import User
+
+    existing = session.scalar(sqlmodel_select(User).where(User.email == "test"))
+    if existing is None:
+        session.add(
+            User(
+                email="test",
+                name="Test User",
+                password_hash=hash_password("test"),
+                is_active=True,
+            )
+        )
+        session.commit()

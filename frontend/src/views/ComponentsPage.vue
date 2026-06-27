@@ -2,89 +2,95 @@
   <div class="components-page">
     <h1>Components</h1>
 
-    <div v-if="error" class="error-banner">
-      {{ error }}
-      <button @click="clearError" class="close-btn">&times;</button>
-    </div>
-
-    <div class="controls">
+    <form class="controls" @submit.prevent="searchComponent">
       <input
+        v-model="searchQuery"
         type="search"
-        placeholder="Search components..."
+        placeholder="Type component name (e.g. AMD Ryzen 9 5950X)"
         class="search-input"
       />
-      <button class="btn btn-primary">Add Component</button>
-    </div>
-
-    <div v-if="isLoading" class="loading">Loading components...</div>
-
-    <div v-else-if="components.length === 0" class="empty-state">
-      No components found. Create your first component!
-    </div>
-
-    <div v-else class="components-grid">
-      <ComponentCard
-        v-for="component in components"
-        :key="component.id"
-        :component="component"
-        @edit="handleEdit"
-        @delete="handleDelete"
-      />
-    </div>
-
-    <div v-if="totalPages > 1" class="pagination">
-      <button
-        v-if="currentPage > 1"
-        @click="fetchComponents(currentPage - 1)"
-        class="btn btn-secondary"
-      >
-        Previous
+      <button class="btn btn-primary" type="submit" :disabled="isLoading">
+        {{ isLoading ? "Searching..." : "Search" }}
       </button>
-      <span class="page-info">Page {{ currentPage }} of {{ totalPages }}</span>
-      <button
-        v-if="currentPage < totalPages"
-        @click="fetchComponents(currentPage + 1)"
-        class="btn btn-secondary"
-      >
-        Next
-      </button>
+    </form>
+
+    <div v-if="error" class="error-banner">
+      {{ error }}
+    </div>
+
+    <div v-if="isLoading" class="loading">Loading prices...</div>
+
+    <div v-else-if="!result" class="empty-state">
+      Search for a component to see latest prices.
+    </div>
+
+    <div v-else class="result-card">
+      <h2>{{ result.name }}</h2>
+      <p class="category"><strong>Category:</strong> {{ result.category }}</p>
+
+      <table v-if="result.latest_prices.length > 0" class="prices-table">
+        <thead>
+          <tr>
+            <th>Shop</th>
+            <th>Price</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="entry in result.latest_prices" :key="`${entry.shop}-${entry.date}`">
+            <td>{{ entry.shop }}</td>
+            <td>{{ entry.price_pln }} {{ entry.currency }}</td>
+            <td>{{ entry.date }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div v-else class="empty-state small">No prices available for this component yet.</div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted } from "vue";
-import { useComponents } from "@/composables";
-import ComponentCard from "@/components/domain/ComponentCard.vue";
+import axios from "axios";
+import { ref } from "vue";
 
-const {
-  components,
-  isLoading,
-  error,
-  currentPage,
-  totalPages,
-  fetchComponents,
-  clearError,
-} = useComponents();
+import { componentsAPI, type ComponentPriceResponse } from "@/api";
 
-const handleEdit = (id: string) => {
-  console.log("Edit component:", id);
-};
+const searchQuery = ref("");
+const isLoading = ref(false);
+const error = ref("");
+const result = ref<ComponentPriceResponse | null>(null);
 
-const handleDelete = async (id: string) => {
-  if (confirm("Are you sure?")) {
-    console.log("Delete component:", id);
+const searchComponent = async () => {
+  const query = searchQuery.value.trim();
+  if (!query) {
+    error.value = "Please enter a component name.";
+    result.value = null;
+    return;
+  }
+
+  isLoading.value = true;
+  error.value = "";
+  try {
+    const response = await componentsAPI.getByName(query);
+    result.value = response.data;
+  } catch (err) {
+    result.value = null;
+    if (axios.isAxiosError(err) && err.response?.status === 404) {
+      error.value = `Component '${query}' not found.`;
+    } else {
+      error.value = "Failed to fetch component prices.";
+    }
+  } finally {
+    isLoading.value = false;
   }
 };
-
-onMounted(() => {
-  fetchComponents();
-});
 </script>
 
 <style scoped>
 .components-page {
   width: 100%;
+  max-width: 960px;
 }
 
 h1 {
@@ -98,17 +104,6 @@ h1 {
   padding: 1rem;
   border-radius: var(--border-radius-lg);
   margin-bottom: 1.5rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-  color: #991b1b;
 }
 
 .controls {
@@ -143,15 +138,6 @@ h1 {
   }
 }
 
-.btn-secondary {
-  background-color: var(--color-secondary);
-  color: white;
-
-  &:hover {
-    background-color: #4b5563;
-  }
-}
-
 .loading,
 .empty-state {
   text-align: center;
@@ -159,22 +145,40 @@ h1 {
   color: var(--color-secondary);
 }
 
-.components-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2rem;
+.empty-state.small {
+  padding: 1rem;
 }
 
-.pagination {
-  display: flex;
-  justify-content: center;
-  gap: 1rem;
-  align-items: center;
-  margin-top: 2rem;
+.result-card {
+  background: white;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 1.5rem;
 }
 
-.page-info {
-  color: var(--color-secondary);
+.result-card h2 {
+  margin: 0 0 0.75rem;
+  color: var(--color-primary);
+}
+
+.category {
+  margin-bottom: 1rem;
+}
+
+.prices-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.prices-table th,
+.prices-table td {
+  border-bottom: 1px solid var(--color-border);
+  padding: 0.75rem;
+  text-align: left;
+}
+
+.prices-table th {
+  background: #f8fafc;
 }
 </style>

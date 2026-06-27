@@ -233,7 +233,7 @@ Recommended run time: **09:00 local time daily** — after x-kom typically updat
 
 | Variable | Description | Example |
 |---|---|---|
-| `POSTGRES_HOST` | DB hostname (service name in Compose) | `db` |
+| `POSTGRES_HOST` | DB hostname (`localhost` locally, `db` in Compose) | `localhost` |
 | `POSTGRES_PORT` | DB port | `5432` |
 | `POSTGRES_DB` | Database name | `component_prices` |
 | `POSTGRES_USER` | DB user | `scraper` |

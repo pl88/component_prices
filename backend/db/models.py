@@ -83,3 +83,22 @@ class PriceSnapshot(SQLModel, table=True):
     date: datetime.date = Field(sa_column=sa.Column(sa.DATE, nullable=False))
 
     component_shop_url: ComponentShopURL | None = Relationship(back_populates="snapshots")
+
+
+class User(SQLModel, table=True):
+    __tablename__ = "users"
+
+    id: int | None = Field(default=None, primary_key=True)
+    email: str = Field(sa_column=sa.Column(sa.String(255), nullable=False, unique=True, index=True))
+    name: str = Field(sa_column=sa.Column(sa.String(255), nullable=False))
+    password_hash: str = Field(sa_column=sa.Column(sa.Text, nullable=False))
+    is_active: bool = Field(
+        sa_column=sa.Column(sa.Boolean, nullable=False, default=True, server_default=sa.true())
+    )
+    created_at: datetime.datetime = Field(
+        sa_column=sa.Column(
+            sa.TIMESTAMP(timezone=True),
+            nullable=False,
+            server_default=sa.func.now(),
+        )
+    )
