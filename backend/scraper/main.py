@@ -6,13 +6,13 @@ import time
 import httpx
 from alembic import command
 from alembic.config import Config as AlembicConfig
-from sqlalchemy import text
+from sqlalchemy import create_engine, text
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import sessionmaker
 
-from scraper.config import Settings, get_settings
-from scraper.db import get_engine, get_session_factory
-from scraper.scraper import scrape_once
-from scraper.seed import seed_mvp_data
+from backend.config import Settings, get_settings
+from backend.scraper.scraper import scrape_once
+from backend.scraper.seed import seed_mvp_data
 
 logging.basicConfig(
     level=logging.INFO,
@@ -25,7 +25,7 @@ def wait_for_db(settings: Settings) -> None:
     delay = settings.db_ready_base_delay_seconds
     for attempt in range(1, settings.db_ready_attempts + 1):
         try:
-            engine = get_engine(settings.database_url)
+            engine = create_engine(settings.database_url, future=True)
             with engine.connect() as connection:
                 connection.execute(text("SELECT 1"))
             engine.dispose()
@@ -50,8 +50,9 @@ def main() -> int:
     settings = get_settings()
     wait_for_db(settings)
     run_migrations(settings)
-    engine = get_engine(settings.database_url)
-    session_factory = get_session_factory(engine)
+
+    engine = create_engine(settings.database_url, future=True, pool_pre_ping=True)
+    session_factory = sessionmaker(bind=engine, expire_on_commit=False)
 
     with session_factory() as session:
         seed_mvp_data(session)

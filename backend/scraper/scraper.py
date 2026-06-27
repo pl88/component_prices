@@ -17,8 +17,8 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.dml import Insert
 
-from scraper.config import Settings
-from scraper.models import ComponentShopURL, PriceSnapshot
+from backend.config import Settings
+from backend.db.models import ComponentShopURL, PriceSnapshot
 
 logger = logging.getLogger(__name__)
 PRICE_PATTERN = re.compile(r"([0-9][0-9 \u00a0]*[,.][0-9]{2})\s*z[łl]", re.IGNORECASE)
@@ -147,20 +147,29 @@ def scrape_once(
             price = parse_price_pln(response.text, min_price)
             stmt = _insert_stmt(
                 dialect=session.get_bind().dialect,
-                component_shop_url_id=target.id,
+                component_shop_url_id=cast(int, target.id),
                 price_pln=price,
                 scraped_at=scrape_time,
             )
             result = session.execute(stmt)
             session.commit()
-            rowcount = cast(int | None, getattr(result, "rowcount", None))
-            if rowcount and rowcount > 0:
+            if result.rowcount == 1:
                 inserted += 1
+                logger.info("Inserted price %.2f PLN for %s", price, target.product_url)
             else:
                 skipped += 1
-        except httpx.HTTPError, SQLAlchemyError, ValueError, RuntimeError:
+                logger.info("Skipped (already exists today) %s", target.product_url)
+        except SQLAlchemyError:
             session.rollback()
             failed += 1
-            logger.exception("Failed to scrape target url=%s", target.product_url)
+            logger.exception("DB error for %s", target.product_url)
+        except Exception:
+            failed += 1
+            logger.exception("Failed to scrape %s", target.product_url)
 
-    return ScrapeSummary(total=len(targets), inserted=inserted, skipped=skipped, failed=failed)
+    return ScrapeSummary(
+        total=len(targets),
+        inserted=inserted,
+        skipped=skipped,
+        failed=failed,
+    )

@@ -1,0 +1,1 @@
+"""Component prices backend package."""

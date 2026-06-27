@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from scraper.models import Component, ComponentShopURL, Shop
+from backend.db.models import Component, ComponentShopURL, Shop
 
 MVP_SHOP_NAME = "x-kom"
 MVP_SHOP_URL = "https://www.x-kom.pl"
