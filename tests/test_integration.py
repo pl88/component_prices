@@ -4,9 +4,9 @@ import httpx
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from scraper.config import Settings
-from scraper.models import ComponentShopURL, PriceSnapshot
-from scraper.scraper import scrape_once
+from backend.config import Settings
+from backend.db.models import ComponentShopURL, PriceSnapshot
+from backend.scraper.scraper import scrape_once
 
 
 def test_end_to_end_scrape_flow(session: Session, seeded_target: ComponentShopURL) -> None:

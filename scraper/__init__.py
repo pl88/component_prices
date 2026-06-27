@@ -1,1 +1,0 @@
-"""Component price scraper package."""

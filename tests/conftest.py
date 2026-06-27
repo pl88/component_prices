@@ -1,28 +1,45 @@
 from collections.abc import Generator
+from datetime import UTC, datetime
 
 import pytest
 from sqlalchemy import create_engine
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.pool import StaticPool
+from sqlmodel import Session, SQLModel
 
-from scraper.models import Base, Component, ComponentShopURL, Shop
+from backend.db.models import Component, ComponentShopURL, Shop
 
 
 @pytest.fixture()
 def session() -> Generator[Session]:
-    engine = create_engine("sqlite+pysqlite:///:memory:", future=True)
-    Base.metadata.create_all(engine)
-    session_factory = sessionmaker(bind=engine, expire_on_commit=False)
-    with session_factory() as db_session:
+    engine = create_engine(
+        "sqlite+pysqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+        future=True,
+    )
+    SQLModel.metadata.create_all(engine)
+    with Session(engine) as db_session:
         yield db_session
     engine.dispose()
 
 
 @pytest.fixture()
 def seeded_target(session: Session) -> ComponentShopURL:
-    shop = Shop(name="x-kom", base_url="https://www.x-kom.pl")
-    component = Component(name="Gigabyte Radeon RX 9060 XT Gaming OC 16GB GDDR6", category="GPU")
-    session.add_all([shop, component])
-    session.flush()
+    now = datetime.now(UTC)
+    shop = Shop(name="x-kom", base_url="https://www.x-kom.pl", created_at=now)
+    component = Component(
+        name="Gigabyte Radeon RX 9060 XT Gaming OC 16GB GDDR6",
+        category="GPU",
+        created_at=now,
+    )
+    session.add(shop)
+    session.add(component)
+    session.commit()
+    session.refresh(shop)
+    session.refresh(component)
+    assert shop.id is not None
+    assert component.id is not None
+
     target = ComponentShopURL(
         component_id=component.id,
         shop_id=shop.id,
@@ -34,4 +51,5 @@ def seeded_target(session: Session) -> ComponentShopURL:
     )
     session.add(target)
     session.commit()
+    session.refresh(target)
     return target

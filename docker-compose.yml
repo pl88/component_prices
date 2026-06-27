@@ -12,10 +12,27 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
 
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: component_prices_backend
+    restart: unless-stopped
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: component_prices
+      POSTGRES_USER: scraper
+      POSTGRES_PASSWORD: scraper
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+
   scraper:
     build:
       context: .
-      dockerfile: scraper/Dockerfile
+      dockerfile: backend/scraper/Dockerfile
     container_name: component_prices_scraper
     environment:
       POSTGRES_HOST: db

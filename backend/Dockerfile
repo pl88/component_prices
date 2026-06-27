@@ -8,9 +8,8 @@ WORKDIR /app
 RUN pip install --no-cache-dir uv
 
 COPY pyproject.toml uv.lock README.md alembic.ini /app/
-COPY scraper /app/scraper
-COPY migrations /app/migrations
+COPY backend /app/backend
 
 RUN uv sync --frozen --extra dev
 
-CMD ["uv", "run", "python", "-m", "scraper.main"]
+CMD ["uv", "run", "uvicorn", "backend.api.app:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -2,7 +2,7 @@ from decimal import Decimal
 
 import pytest
 
-from scraper.scraper import parse_price_pln
+from backend.scraper.scraper import parse_price_pln
 
 
 def test_parse_price_pln_from_selector() -> None:
