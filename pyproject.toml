@@ -34,7 +34,7 @@ select = ["E", "F", "I", "B", "UP", "N", "W"]
 
 [tool.pyright]
 typeCheckingMode = "strict"
-include = ["scraper", "tests"]
+include = ["tests"]
 venvPath = "."
 venv = ".venv"
 

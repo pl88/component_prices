@@ -1,4 +1,5 @@
 from collections.abc import Generator
+from datetime import UTC, datetime
 
 import pytest
 from sqlalchemy import create_engine
@@ -24,13 +25,20 @@ def session() -> Generator[Session]:
 
 @pytest.fixture()
 def seeded_target(session: Session) -> ComponentShopURL:
-    shop = Shop(name="x-kom", base_url="https://www.x-kom.pl")
-    component = Component(name="Gigabyte Radeon RX 9060 XT Gaming OC 16GB GDDR6", category="GPU")
+    now = datetime.now(UTC)
+    shop = Shop(name="x-kom", base_url="https://www.x-kom.pl", created_at=now)
+    component = Component(
+        name="Gigabyte Radeon RX 9060 XT Gaming OC 16GB GDDR6",
+        category="GPU",
+        created_at=now,
+    )
     session.add(shop)
     session.add(component)
     session.commit()
     session.refresh(shop)
     session.refresh(component)
+    assert shop.id is not None
+    assert component.id is not None
 
     target = ComponentShopURL(
         component_id=component.id,
