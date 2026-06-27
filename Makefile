@@ -4,10 +4,10 @@ run:
 	docker compose up -d db
 	docker compose run --build --rm scraper
 
-backend-up:
+start-backend:
 	docker compose up -d db backend
 
-backend-down:
+stop-backend:
 	docker compose stop backend
 
 start-frontend:

@@ -6,9 +6,11 @@ from alembic import context
 from sqlalchemy import engine_from_config, pool
 from sqlmodel import SQLModel
 
+from backend.config import get_settings
 import backend.db.models  # noqa: F401 – registers all SQLModel table metadata
 
 config = context.config
+config.set_main_option("sqlalchemy.url", get_settings().database_url)
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)

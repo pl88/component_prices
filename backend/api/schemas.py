@@ -17,3 +17,23 @@ class ComponentPriceResponse(SQLModel):
     name: str
     category: str
     latest_prices: list[PriceEntry]
+
+
+class LoginRequest(SQLModel):
+    email: str
+    password: str
+
+
+class AuthUserResponse(SQLModel):
+    id: str
+    email: str
+    name: str
+
+
+class LoginResponse(SQLModel):
+    token: str
+    user: AuthUserResponse
+
+
+class LogoutResponse(SQLModel):
+    detail: str
