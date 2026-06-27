@@ -36,7 +36,9 @@ def test_get_component_by_name_returns_latest_price(
     app.dependency_overrides[get_session] = lambda: session
     try:
         with TestClient(app) as client:
-            response = client.get("/api/v1/components/Gigabyte Radeon RX 9060 XT Gaming OC 16GB GDDR6")
+            response = client.get(
+                "/api/v1/components/Gigabyte Radeon RX 9060 XT Gaming OC 16GB GDDR6"
+            )
     finally:
         app.dependency_overrides.clear()
 

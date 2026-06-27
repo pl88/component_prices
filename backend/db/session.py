@@ -22,7 +22,7 @@ def _get_shared_engine() -> Engine:
     return _engine
 
 
-def get_session() -> Generator[Session, None, None]:
+def get_session() -> Generator[Session]:
     """FastAPI dependency that yields a database session."""
     with Session(_get_shared_engine()) as session:
         yield session
